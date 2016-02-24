@@ -7,24 +7,21 @@ module Graylog.Gelf where
 import           Data.Aeson        (ToJSON (..), Value (..), genericToJSON,
                                     toJSON)
 import           Data.Aeson.Casing
-import           Data.Scientific
 import           Data.Text         (Text)
 import           Data.Time
 import           Data.Typeable
-import           Data.Vector
 import           GHC.Generics
 
 data GELF
    = GELF
-      { _gelfVersion          :: Version
-      , _gelfHost             :: Text
-      , _gelfShortMessage     :: Text
-      , _gelfFullMessage      :: Maybe Text
-      , _gelfTimestamp        :: Maybe UTCTime
-      , _gelfLevel            :: Maybe SyslogLevel
-      , _gelfLine             :: Maybe Word
-      , _gelfFile             :: Maybe Text
-      , _gelfAdditionalFields :: Vector Field
+      { _gelfVersion      :: Version
+      , _gelfHost         :: Text
+      , _gelfShortMessage :: Text
+      , _gelfFullMessage  :: Maybe Text
+      , _gelfTimestamp    :: Maybe UTCTime
+      , _gelfLevel        :: Maybe SyslogLevel
+      , _gelfLine         :: Maybe Word
+      , _gelfFile         :: Maybe Text
       }
    deriving (Show, Typeable, Generic)
 
@@ -62,15 +59,3 @@ instance ToJSON SyslogLevel where
    toJSON Notice        = Number 5
    toJSON Informational = Number 6
    toJSON Debug         = Number 7
-
---
-
-data Field
-   = FieldString Text
-   | FieldNumber Scientific
-   deriving (Eq, Show, Typeable, Generic)
-
-instance ToJSON Field where
-   toJSON (FieldString s) = String s
-   toJSON (FieldNumber n) = Number n
-
