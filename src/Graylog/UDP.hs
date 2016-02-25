@@ -2,18 +2,12 @@ module Graylog.UDP
    ( Graylog (..)
    , sendLog
 
-   , module Graylog.Gelf
+   , module Export
    ) where
 
-import           Network.Socket
-
-import           Graylog.Gelf
-
-data Graylog
-   = Graylog
-      { _graylogHost :: String
-      , _graylogPort :: String
-      }
+import           Graylog.Gelf  as Export
+import           Graylog.Types as Export
 
 sendLog :: Graylog -> GELF -> IO ()
 sendLog glog msg = undefined
+

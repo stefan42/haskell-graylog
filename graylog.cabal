@@ -17,6 +17,9 @@ library
    default-language:    Haskell2010
 
    exposed-modules:     Graylog.Gelf
+                     ,  Graylog.UDP
+
+   other-modules:       Graylog.Types
 
    ghc-options:         -Wall -rtsopts
 
