@@ -5,7 +5,11 @@ module Graylog.Types
    , _graylogHost
    , _graylogPort
    , _graylogAddress
+   , _graylogSocket
+   , _graylogHostName
+   , ChunkSize
 
+   , defaultChunkSize
    , openGraylog
    , closeGraylog
    ) where
@@ -15,17 +19,23 @@ import qualified Data.Text      as T
 import           Network.BSD
 import           Network.Socket
 
+type ChunkSize = Word
+
 data Graylog
    = Graylog
-      { _graylogHost     :: String
-      , _graylogPort     :: String
-      , _graylogAddress  :: AddrInfo
-      , _graylogSocket   :: Socket
-      , _graylogHostName :: Text
+      { _graylogHost      :: String
+      , _graylogPort      :: String
+      , _graylogAddress   :: AddrInfo
+      , _graylogSocket    :: Socket
+      , _graylogHostName  :: Text
+      , _graylogChunkSize :: ChunkSize
       }
 
-openGraylog :: HostName -> ServiceName -> IO (Either String Graylog)
-openGraylog host port = do
+defaultChunkSize :: ChunkSize
+defaultChunkSize = 8192
+
+openGraylog :: HostName -> ServiceName -> ChunkSize -> IO (Either String Graylog)
+openGraylog host port chksize = do
    infos <- getAddrInfo Nothing (Just host) (Just port)
    case infos of
       []     -> return $ Left "No address info found."
@@ -33,7 +43,7 @@ openGraylog host port = do
          sock <- socket (addrFamily info) Datagram defaultProtocol
          connect sock (addrAddress info)
          hostname <- getHostName
-         return $ Right $ Graylog host port info sock (T.pack hostname)
+         return $ Right $ Graylog host port info sock (T.pack hostname) chksize
       _      -> return $ Left "Too many address infos found."
 
 closeGraylog :: Graylog -> IO ()

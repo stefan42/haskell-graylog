@@ -27,6 +27,8 @@ library
    
                      ,  aeson
                      ,  aeson-casing
+                     ,  bytestring
+                     ,  mwc-random
                      ,  network
                      ,  scientific
                      ,  text
