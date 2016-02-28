@@ -28,8 +28,8 @@ library
                      ,  aeson
                      ,  aeson-casing
                      ,  bytestring
-                     ,  mwc-random
                      ,  network
+                     ,  random
                      ,  scientific
                      ,  text
                      ,  time

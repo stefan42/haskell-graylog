@@ -6,8 +6,9 @@ module Graylog.UDP
 
 import           Data.Aeson
 import qualified Data.ByteString.Lazy           as LBS
+import           Data.Word
 import           Network.Socket.ByteString.Lazy
-import           System.Random.MWC
+import           System.Random
 
 import           Graylog.Gelf                   as Export
 import           Graylog.Types                  as Export
@@ -16,7 +17,15 @@ sendLog :: Graylog -> GELF -> IO ()
 sendLog glog msg = mapM_ (send $ _graylogSocket glog) cks
    where
       raw = encode msg
-      cks = chunky raw
+      cks = chunky glog raw
 
-chunky :: LBS.ByteString -> [LBS.ByteString]
-chunky = undefined
+chunky :: Graylog -> LBS.ByteString -> IO [LBS.ByteString]
+chunky glog raw = do
+   groupId <- randomIO
+   splitAt gsize
+   where
+      magic = undefined
+      seq   = undefined
+      total = undefined
+      hlen  = 12
+      gsize = (fromIntegral (_graylogChunkSize glog)) - hlen
