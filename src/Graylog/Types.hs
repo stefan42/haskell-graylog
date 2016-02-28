@@ -8,6 +8,7 @@ module Graylog.Types
    , _graylogAddress
    , _graylogSocket
    , _graylogHostName
+   , _graylogChunkSize
    , ChunkSize
 
    , defaultChunkSize
@@ -38,7 +39,9 @@ defaultChunkSize = 8192
 
 openGraylog
    :: HostName -> ServiceName -> ChunkSize -> IO (Either String Graylog)
-openGraylog h p cksize = getAddrInfo Nothing (Just h) (Just p) >>= \case
+openGraylog h p cksize
+   | cksize < 1024 = return $ Left "ChunkSize must be at least 1024."
+   | otherwise     = getAddrInfo Nothing (Just h) (Just p) >>= \case
    []     -> return $ Left "No address info found."
    infos ->
       case find (\i -> addrSocketType i == Datagram) infos of

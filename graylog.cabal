@@ -51,6 +51,8 @@ test-suite test-state
 
                      ,  aeson
                      ,  aeson-casing
+                     ,  bytestring
+                     ,  file-embed
                      ,  network
                      ,  scientific
                      ,  tasty
