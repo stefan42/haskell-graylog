@@ -5,27 +5,37 @@ module Graylog.UDP
    ) where
 
 import           Data.Aeson
-import qualified Data.ByteString.Lazy           as LBS
-import           Data.Word
+{-import           Data.ByteString.Builder-}
+{-import qualified Data.ByteString.Lazy           as LBS-}
+{-import           Data.Word-}
 import           Network.Socket.ByteString.Lazy
-import           System.Random
+{-import           System.Random-}
 
 import           Graylog.Gelf                   as Export
 import           Graylog.Types                  as Export
 
 sendLog :: Graylog -> GELF -> IO ()
-sendLog glog msg = mapM_ (send $ _graylogSocket glog) cks
+sendLog glog msg = do
+   _ <- send (_graylogSocket glog) raw
+   print raw
+   return ()
    where
       raw = encode msg
-      cks = chunky glog raw
 
-chunky :: Graylog -> LBS.ByteString -> IO [LBS.ByteString]
-chunky glog raw = do
-   groupId <- randomIO
-   splitAt gsize
-   where
-      magic = undefined
-      seq   = undefined
-      total = undefined
-      hlen  = 12
-      gsize = (fromIntegral (_graylogChunkSize glog)) - hlen
+{-sendLog :: Graylog -> GELF -> IO ()-}
+{-sendLog glog msg = do-}
+   {-cks <- chunky glog raw-}
+   {-mapM_ (send $ _graylogSocket glog) cks-}
+   {-where-}
+      {-raw = encode msg-}
+
+{-chunky :: Graylog -> LBS.ByteString -> IO [LBS.ByteString]-}
+{-chunky glog raw = do-}
+   {-groupId <- randomIO-}
+   {-splitAt gsize-}
+   {-where-}
+      {-magic           = word8 0x1e <> word8 0x0f-}
+      {-seqNum          = undefined-}
+      {-(count, excess) = quotRem (LBS.length raw) gzie-}
+      {-hlen            = 12-}
+      {-gsize           = (fromIntegral (_graylogChunkSize glog)) - hlen-}

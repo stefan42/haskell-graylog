@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase      #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module Graylog.Types
@@ -14,6 +15,7 @@ module Graylog.Types
    , closeGraylog
    ) where
 
+import           Data.List
 import           Data.Text      (Text)
 import qualified Data.Text      as T
 import           Network.BSD
@@ -34,19 +36,18 @@ data Graylog
 defaultChunkSize :: ChunkSize
 defaultChunkSize = 8192
 
-openGraylog :: HostName -> ServiceName -> ChunkSize -> IO (Either String Graylog)
-openGraylog host port chksize = do
-   infos <- getAddrInfo Nothing (Just host) (Just port)
-   case infos of
-      []     -> return $ Left "No address info found."
-      [info] -> do
-         sock <- socket (addrFamily info) Datagram defaultProtocol
-         connect sock (addrAddress info)
-         hostname <- getHostName
-         return $ Right $ Graylog host port info sock (T.pack hostname) chksize
-      _      -> return $ Left "Too many address infos found."
+openGraylog
+   :: HostName -> ServiceName -> ChunkSize -> IO (Either String Graylog)
+openGraylog h p cksize = getAddrInfo Nothing (Just h) (Just p) >>= \case
+   []     -> return $ Left "No address info found."
+   infos ->
+      case find (\i -> addrSocketType i == Datagram) infos of
+         Nothing -> return $ Left "No datagram info found for address."
+         Just  i -> do
+            sock <- socket (addrFamily i) Datagram defaultProtocol
+            connect sock (addrAddress i)
+            hostname <- getHostName
+            return $ Right $ Graylog h p i sock (T.pack hostname) cksize
 
 closeGraylog :: Graylog -> IO ()
 closeGraylog Graylog{..} = close _graylogSocket
-
-

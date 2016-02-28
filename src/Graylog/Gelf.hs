@@ -59,3 +59,12 @@ instance ToJSON SyslogLevel where
    toJSON Notice        = Number 5
    toJSON Informational = Number 6
    toJSON Debug         = Number 7
+
+--
+
+simpleGelf
+   :: Text     -- ^ Hostname
+   -> Text     -- ^ Short message
+   -> GELF
+simpleGelf host short =
+   GELF Version1x1 host short Nothing Nothing Nothing Nothing Nothing
