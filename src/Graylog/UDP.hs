@@ -1,3 +1,4 @@
+-- | UDP Chunked support for sending messages to graylog.
 module Graylog.UDP
    ( sendLog
 

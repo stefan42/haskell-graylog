@@ -2,6 +2,8 @@
 {-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE OverloadedStrings  #-}
 
+-- | Default formatting for Graylog messages,
+-- see http://docs.graylog.org/en/latest/pages/gelf.html
 module Graylog.Gelf where
 
 import           Data.Aeson        (ToJSON (..), Value (..), genericToJSON,

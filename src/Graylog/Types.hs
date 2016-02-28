@@ -22,8 +22,11 @@ import qualified Data.Text      as T
 import           Network.BSD
 import           Network.Socket
 
+-- | The maximum size of each datagram when using UDP transit methods.
 type ChunkSize = Word
 
+-- | Handle for a socket connected to Graylog. In some cases this socket
+-- is UDP and will not have a maintained session.
 data Graylog
    = Graylog
       { _graylogHost      :: String
@@ -38,7 +41,10 @@ defaultChunkSize :: ChunkSize
 defaultChunkSize = 8192
 
 openGraylog
-   :: HostName -> ServiceName -> ChunkSize -> IO (Either String Graylog)
+   :: HostName          -- ^ The host on which graylog is running.
+   -> ServiceName       -- ^ The port on which graylog is running.
+   -> ChunkSize         -- ^ The maximum size of each UDP datagram.
+   -> IO (Either String Graylog)
 openGraylog h p cksize
    | cksize < 1024 = return $ Left "ChunkSize must be at least 1024."
    | otherwise     = getAddrInfo Nothing (Just h) (Just p) >>= \case

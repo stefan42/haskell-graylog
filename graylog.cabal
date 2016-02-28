@@ -1,9 +1,10 @@
 name:             graylog
 version:          0.1.0.0
 synopsis:         Support for graylog output.
-description:      Please see README.md
-homepage:         http://github.com/githubuser/graylog#readme
-license:          MIT
+description:      Support for sending GELF formatted messages to graylog over
+                  chunked UDP.
+homepage:         https://github.com/AndrewRademacher/haskell-graylog
+license:          WTFPL
 license-file:     LICENSE
 author:           Andrew Rademacher
 maintainer:       andrewrademacher@gmail.com
