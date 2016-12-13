@@ -6,10 +6,8 @@
 -- see http://docs.graylog.org/en/latest/pages/gelf.html
 module Graylog.Gelf where
 
-import           Data.Aeson        (ToJSON (..), Value (..), genericToJSON,
-                                    toJSON)
-import           Data.Aeson.Casing
-import           Data.Text         (Text)
+import           Data.Aeson        (ToJSON (..), Value (..), object, (.=), toJSON)
+import           Data.Text         (Text, cons)
 import           Data.Time
 import           Data.Typeable
 import           GHC.Generics
@@ -24,11 +22,40 @@ data GELF
       , _gelfLevel        :: Maybe SyslogLevel
       , _gelfLine         :: Maybe Word
       , _gelfFile         :: Maybe Text
+      , _gelfAdditionals  :: [Field]
       }
    deriving (Show, Typeable, Generic)
 
 instance ToJSON GELF where
-   toJSON = genericToJSON $ aesonPrefix snakeCase
+   toJSON gelf = object
+      $ ("version"       .= (_gelfVersion gelf))
+      : ("host"          .= (_gelfHost gelf))
+      : ("short_message" .= (_gelfShortMessage gelf))
+      : ("full_message"  .= (_gelfFullMessage gelf))
+      : ("timestamp"     .= (_gelfTimestamp gelf))
+      : ("level"         .= (_gelfLevel gelf))
+      : ("line"          .= (_gelfLine gelf))
+      : ("file"          .= (_gelfFile gelf))
+      : map (\(n,v) -> ('_' `cons` n, toJSON v)) (_gelfAdditionals gelf)
+
+--
+
+data FieldValue
+  = StringField Text
+  | NumberField Word
+  deriving (Show, Typeable, Generic)
+
+instance ToJSON FieldValue where
+   toJSON (StringField s) = toJSON s
+   toJSON (NumberField n) = toJSON n
+
+type Field = (Text, FieldValue)
+
+gelfSField :: Text -> Text -> Field
+gelfSField n v = (n, StringField v)
+
+gelfNField :: Text -> Word -> Field
+gelfNField n v = (n, NumberField v)
 
 --
 
@@ -69,4 +96,4 @@ simpleGelf
    -> Text     -- ^ Short message
    -> GELF
 simpleGelf host short =
-   GELF Version1x1 host short Nothing Nothing Nothing Nothing Nothing
+   GELF Version1x1 host short Nothing Nothing Nothing Nothing Nothing []
