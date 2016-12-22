@@ -39,6 +39,7 @@ library
                      ,  text
                      ,  time
                      ,  vector
+                     ,  zlib
 
 test-suite test-state
    type:                exitcode-stdio-1.0

@@ -5,6 +5,7 @@ module Graylog.UDP
    , module Export
    ) where
 
+import           Codec.Compression.GZip         (compress)
 import           Data.Aeson
 import           Data.ByteString.Builder
 import qualified Data.ByteString.Lazy           as LBS
@@ -47,4 +48,4 @@ chunky glog raw = do
         <> word64BE gid
         <> word8 s
         <> word8 (fromIntegral totalNum)
-        <> lazyByteString g) : append gid gs ss
+        <> lazyByteString (compress g)) : append gid gs ss
