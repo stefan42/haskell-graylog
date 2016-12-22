@@ -18,34 +18,37 @@ import           Graylog.Gelf                   as Export
 import           Graylog.Types                  as Export
 
 sendLog :: Graylog -> GELF -> IO ()
-sendLog glog msg = do
-   cks <- chunky glog raw
-   mapM_ (send $ _graylogSocket glog) cks
-   where
-      raw = encode msg
+sendLog glog gelfMsg = do
+  messageId <- randomIO
+  let rawMsg = compress $ encode gelfMsg
+      cks    = chunkMessage glog rawMsg
+      msgs   = addMessageHeaders messageId cks
+  mapM_ (send $ _graylogSocket glog) msgs
 
-chunky :: Graylog -> LBS.ByteString -> IO [LBS.ByteString]
-chunky glog raw = do
-   groupId <- randomIO
-   let groups = divide totalNum raw
-   return $ append groupId groups seqNums
-   where
-      magic           = word8 0x1e <> word8 0x0f
-      seqNums         = [0..] :: [Word8]
-      totalNum        = if excess > 0 then count + 1 else count
-      (count, excess) = quotRem (LBS.length raw) gsize
-      hlen            = 12
-      gsize           = (fromIntegral (_graylogChunkSize glog)) - hlen
+chunkMessage :: Graylog -> LBS.ByteString -> [LBS.ByteString]
+chunkMessage glog raw = divide raw
+  where
+    hlen       = 12
+    gsize      = (fromIntegral (_graylogChunkSize glog)) - hlen
+    divide dat = if LBS.null dat
+      then []
+      else
+        let (pre, post) = LBS.splitAt gsize dat
+        in pre : divide post
 
-      divide   0 dat = [dat]
-      divide num dat = let (pre, post) = LBS.splitAt gsize dat
-                        in pre : divide (num - 1) post
-
-      append _   []     _      = []
-      append _   _      []     = error "the impossible has happened."
-      append gid (g:gs) (s:ss) = (toLazyByteString
+addMessageHeaders :: Word64 -> [LBS.ByteString] -> [LBS.ByteString]
+addMessageHeaders _   []    = []
+addMessageHeaders _   [msg] = [msg]
+addMessageHeaders mid msgs  =
+  if totalNum > 128
+    then [] -- message too long, skip message - what else can we do?
+    else map addmessageHeader $ zip [0..] msgs
+  where
+    totalNum                      = length msgs
+    magic                         = word8 0x1e <> word8 0x0f
+    addmessageHeader (index, msg) = (toLazyByteString
          $ magic
-        <> word64BE gid
-        <> word8 s
+        <> word64BE mid
+        <> word8 index
         <> word8 (fromIntegral totalNum)
-        <> lazyByteString (compress g)) : append gid gs ss
+        <> lazyByteString msg)
