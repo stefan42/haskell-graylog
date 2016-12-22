@@ -5,7 +5,8 @@ module Graylog.UDP
    , module Export
    ) where
 
-import           Codec.Compression.GZip         (compress)
+import qualified Codec.Compression.GZip         as GZIP
+import qualified Codec.Compression.Zlib         as ZLIB
 import           Data.Aeson
 import           Data.ByteString.Builder
 import qualified Data.ByteString.Lazy           as LBS
@@ -20,10 +21,15 @@ import           Graylog.Types                  as Export
 sendLog :: Graylog -> GELF -> IO ()
 sendLog glog gelfMsg = do
   messageId <- randomIO
-  let rawMsg = compress $ encode gelfMsg
+  let rawMsg = compress (_graylogCompession glog) $ encode gelfMsg
       cks    = chunkMessage glog rawMsg
       msgs   = addMessageHeaders messageId cks
   mapM_ (send $ _graylogSocket glog) msgs
+
+compress :: CompressionType -> LBS.ByteString -> LBS.ByteString
+compress PlainText = id
+compress GZIP      = GZIP.compress
+compress ZLIB      = ZLIB.compress
 
 chunkMessage :: Graylog -> LBS.ByteString -> [LBS.ByteString]
 chunkMessage glog raw = divide raw
