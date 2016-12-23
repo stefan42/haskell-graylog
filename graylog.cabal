@@ -66,4 +66,5 @@ test-suite test-state
                      ,  text
                      ,  time
                      ,  vector
+                     ,  unordered-containers
 
