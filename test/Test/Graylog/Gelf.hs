@@ -2,9 +2,10 @@
 
 module Test.Graylog.Gelf where
 
-import qualified Data.Text           as T
-import qualified Data.HashMap.Strict as HMS
 import           Data.Aeson          (Object, Value(..),encode, decode)
+import qualified Data.HashMap.Strict as HMS
+import qualified Data.Text           as T
+import qualified Data.Time           as TIME
 
 import           Test.Tasty
 import           Test.Tasty.HUnit
@@ -17,6 +18,9 @@ tests = testGroup "Test.Graylog.Gelf"
    [ testCase "Convert simple message to JSON" case_convertSimpleMessage
    , testCase "Convert additional attributes to JSON" case_convertAdditionalAttributes
    , testCase "Convert level to JSON" case_convertLevel
+   , testCase "Convert timestamp to JSON (only seconds)" case_convertTimestampWithSeconds
+   , testCase "Convert timestamp to JSON (with milliseconds)" case_convertTimestampWithMillies
+   , testCase "Convert timestamp to JSON (skipping picoseconds)" case_convertTimestampWithPicos
    ]
 
 case_convertSimpleMessage :: IO ()
@@ -52,6 +56,36 @@ case_convertLevel = mapM_
     , (Informational , 6)
     , (Debug         , 7)
     ]
+
+case_convertTimestampWithSeconds :: IO ()
+case_convertTimestampWithSeconds = do
+    jsonObject <- toJsonObject (simpleGelf "myHost" "testMessage")
+        { _gelfTimestamp = Just timestamp }
+    checkJsonValue jsonObject "timestamp" (Number 1453388845)
+  where
+    timestamp = TIME.parseTimeOrError
+        True TIME.defaultTimeLocale "%Y-%m-%dT%H:%M:%S" $
+        "2016-01-21T15:07:25"
+
+case_convertTimestampWithMillies :: IO ()
+case_convertTimestampWithMillies = do
+    jsonObject <- toJsonObject (simpleGelf "myHost" "testMessage")
+        { _gelfTimestamp = Just timestamp }
+    checkJsonValue jsonObject "timestamp" (Number 1453388845.999)
+  where
+    timestamp = TIME.parseTimeOrError
+        True TIME.defaultTimeLocale "%Y-%m-%dT%H:%M:%S.%q" $
+        "2016-01-21T15:07:25.999" ++ (replicate 9 '0')
+
+case_convertTimestampWithPicos :: IO ()
+case_convertTimestampWithPicos = do
+    jsonObject <- toJsonObject (simpleGelf "myHost" "testMessage")
+        { _gelfTimestamp = Just timestamp }
+    checkJsonValue jsonObject "timestamp" (Number 1453388845.999)
+  where
+    timestamp = TIME.parseTimeOrError
+        True TIME.defaultTimeLocale "%Y-%m-%dT%H:%M:%S.%q" $
+        "2016-01-21T15:07:25.999123456789"
 
 toJsonObject :: GELF -> IO Object
 toJsonObject gelf

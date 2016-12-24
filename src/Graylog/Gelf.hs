@@ -9,6 +9,7 @@ module Graylog.Gelf where
 import           Data.Aeson        (ToJSON (..), Value (..), object, (.=), toJSON)
 import           Data.Text         (Text, cons)
 import           Data.Time
+import           Data.Time.Clock.POSIX
 import           Data.Typeable
 import           GHC.Generics
 
@@ -32,11 +33,21 @@ instance ToJSON GELF where
       : ("host"          .= (_gelfHost gelf))
       : ("short_message" .= (_gelfShortMessage gelf))
       : ("full_message"  .= (_gelfFullMessage gelf))
-      : ("timestamp"     .= (_gelfTimestamp gelf))
+      : ("timestamp"     .= (convertedTimestamp $ _gelfTimestamp gelf))
       : ("level"         .= (_gelfLevel gelf))
       : ("line"          .= (_gelfLine gelf))
       : ("file"          .= (_gelfFile gelf))
       : map (\(n,v) -> ('_' `cons` n, toJSON v)) (_gelfAdditionals gelf)
+     where
+      convertedTimestamp :: Maybe UTCTime -> Maybe Double
+      convertedTimestamp Nothing   = Nothing
+      convertedTimestamp (Just ts) = Just
+          $ (/1000)
+          $ fromIntegral
+          $ (floor::(RealFrac a)=>a->Integer)
+          $ (*1000)
+          $ (realToFrac::(Real a) => a->Double)
+          $ utcTimeToPOSIXSeconds ts
 
 --
 
